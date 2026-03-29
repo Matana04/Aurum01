@@ -51,6 +51,12 @@ app.post('/usuarios', async (req, res) => {
       return res.status(400).json({ erro: "A senha deve ter no mínimo 10 caracteres!" });
     }
 
+    // Verifica se o email já está em uso antes de tentar inserir (previne P2002 + 500)
+    const usuarioExistente = await prisma.usuarios.findUnique({ where: { email } });
+    if (usuarioExistente) {
+      return res.status(400).json({ erro: "Esse email já está em uso." });
+    }
+
     // Criptografa a senha com bcrypt antes de salvar
     const senhaHash = await bcrypt.hash(senha, 10);
 
@@ -68,12 +74,15 @@ app.post('/usuarios', async (req, res) => {
     });
 
   } catch (error: any) {
-    if (error.code === 'P2002') {
+    if (error?.code === 'P2002') {
       return res.status(400).json({ erro: "Esse email já está em uso." });
     }
-    
+
     console.error("ERRO NO CADASTRO:", error);
-    return res.status(500).json({ erro: "Erro interno no servidor." });
+    return res.status(500).json({
+      erro: "Erro interno no servidor.",
+      detalhes: error?.message ?? String(error)
+    });
   }
 });
 
@@ -271,6 +280,57 @@ app.post('/logout', (req, res) => {
   // Numa implementação de sessions/token, aqui limparíamos o token de acesso.
   // Atualmente a API é stateless e o cliente deve descartar o token/localStorage.
   return res.status(200).json({ mensagem: 'Logout realizado com sucesso!' });
+});
+
+// AUTH - Login de admin consultando banco (usuário já existente)
+const ADMIN_ID = 'f4f299fb-c169-4a94-b6d7-f9a1564f1164';
+
+app.post('/admin', async (req, res) => {
+  try {
+    const { email, senha } = req.body;
+
+    if (!email || !senha) {
+      return res.status(400).json({ erro: 'Email e senha são obrigatórios.' });
+    }
+
+    const admin = await prisma.usuarios.findUnique({
+      where: { id: ADMIN_ID },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        senha: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    if (!admin) {
+      return res.status(401).json({ erro: 'Usuário admin não encontrado.' });
+    }
+
+    if (admin.email !== email || admin.nome !== 'Admin') {
+      return res.status(401).json({ erro: 'Credenciais de admin inválidas.' });
+    }
+
+    const senhaValida = await bcrypt.compare(senha, admin.senha);
+    if (!senhaValida) {
+      return res.status(401).json({ erro: 'Credenciais de admin inválidas.' });
+    }
+
+    const usuarioResp = {
+      id: admin.id,
+      nome: admin.nome,
+      email: admin.email,
+      createdAt: admin.createdAt,
+      updatedAt: admin.updatedAt
+    };
+
+    return res.status(200).json({ mensagem: 'Login admin realizado com sucesso!', usuario: usuarioResp });
+  } catch (error: any) {
+    console.error('ERRO NA AUTENTICAÇÃO ADMIN:', error);
+    return res.status(500).json({ erro: 'Erro interno no servidor.' });
+  }
 });
 
 // ===== CRUD DE DESPESAS =====
