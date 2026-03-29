@@ -266,6 +266,13 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// AUTH - Logout de usuário
+app.post('/logout', (req, res) => {
+  // Numa implementação de sessions/token, aqui limparíamos o token de acesso.
+  // Atualmente a API é stateless e o cliente deve descartar o token/localStorage.
+  return res.status(200).json({ mensagem: 'Logout realizado com sucesso!' });
+});
+
 // ===== CRUD DE DESPESAS =====
 
 // CREATE - Cadastrar nova despesa
