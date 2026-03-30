@@ -36,9 +36,36 @@ router.post('/login', AuthController.loginUsuario);
  *     tags:
  *       - Auth
  *     summary: Logout de usuário
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: 'uuid-do-usuario'
  *     responses:
  *       200:
  *         description: Logout realizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 mensagem:
+ *                   type: string
+ *                 usuario:
+ *                   type: object
+ *       400:
+ *         description: Requisição inválida (userId obrigatório)
+ *       404:
+ *         description: Usuário não encontrado
+ *       500:
+ *         description: Erro interno no servidor
  */
 router.post('/logout', AuthController.logoutUsuario);
 

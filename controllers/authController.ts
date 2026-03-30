@@ -37,8 +37,25 @@ export const loginUsuario = async (req: Request, res: Response) => {
   }
 };
 
-export const logoutUsuario = (req: Request, res: Response) => {
-  return res.status(200).json({ mensagem: 'Logout realizado com sucesso!' });
+export const logoutUsuario = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ erro: 'userId é obrigatório para logout.' });
+    }
+
+    const usuario = await UsuarioModel.findUsuarioById(userId);
+    if (!usuario) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
+
+    // Aqui você pode adicionar lógica real de blacklist de token, sessão, etc.
+    return res.status(200).json({ mensagem: 'Logout realizado com sucesso!', usuario: formatUsuarioSemSenha(usuario) });
+  } catch (error) {
+    console.error('ERRO NO LOGOUT:', error);
+    return res.status(500).json({ erro: 'Erro interno no servidor.' });
+  }
 };
 
 export const loginAdmin = async (req: Request, res: Response) => {
