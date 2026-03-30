@@ -1,7 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
   provider = "prisma-client"
@@ -13,15 +12,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Se quiser usar o valor fixo local, defina em .env: DATABASE_URL="postgres://..."
 
 model Usuarios {
   id        String    @id @default(uuid())
   nome      String
   email     String    @unique
-  senha     String    // bcrypt usado para gerar o hash da senha no backend
+  senha     String    
   
-  // Relacionamentos
   despesas  Despesas[]
   metas     Metas[]
 
@@ -37,7 +34,6 @@ model Despesas {
   valor     Decimal  @db.Decimal(10, 2)
   data      DateTime 
   
-  // Chave Estrangeira
   usuarioId String
   usuario   Usuarios @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
@@ -54,7 +50,6 @@ model Metas {
   dataInicio DateTime
   dataFinal  DateTime
   
-  // Chave Estrangeira
   usuarioId  String
   usuario    Usuarios @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
